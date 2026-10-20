@@ -18,7 +18,31 @@ function crc8(bytes:Uint8Array){let c=0;for(const b of bytes){c^=b;for(let k=0;k
 function bytesFor(hex:string){if(!/^[0-9a-f]{8}$/i.test(hex))throw new Error('ID harus 8 digit hex');return Uint8Array.from(hex.match(/../g)!.map(x=>parseInt(x,16)));}
 function payload(hex:string){const bytes=bytesFor(hex);const full=[...bytes,crc8(bytes)];return full.flatMap(b=>Array.from({length:8},(_,k)=>(b>>(7-k))&1));}
 function fromBits(bits:number[]){const bytes=Uint8Array.from(Array.from({length:5},(_,i)=>bits.slice(i*8,i*8+8).reduce((v,b)=>(v<<1)|b,0)));if(crc8(bytes.slice(0,4))!==bytes[4])return null;return Array.from(bytes.slice(0,4)).map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();}
-export function imageCanvas(source:CanvasImageSource){const c=document.createElement('canvas');c.width=SIDE;c.height=SIDE;const ctx=c.getContext('2d',{willReadFrequently:true})!;ctx.fillStyle='#fff';ctx.fillRect(0,0,SIDE,SIDE);const s=source as HTMLImageElement;const w=(s.videoWidth||s.naturalWidth||('width' in s?s.width:512)) as number;const h=(s.videoHeight||s.naturalHeight||('height' in s?s.height:512)) as number;const scale=Math.min(SIDE/w,SIDE/h);ctx.drawImage(source,(SIDE-w*scale)/2,(SIDE-h*scale)/2,w*scale,h*scale);return c;}
+export function imageCanvas(source: CanvasImageSource) {
+ const c = document.createElement('canvas');
+ c.width = SIDE; c.height = SIDE;
+ const ctx = c.getContext('2d', {willReadFrequently:true});
+ if (!ctx) throw new Error('Canvas 2D tidak tersedia');
+ ctx.fillStyle='#fff'; ctx.fillRect(0,0,SIDE,SIDE);
+ let w: number; let h: number;
+ if (source instanceof HTMLVideoElement) {
+  w=source.videoWidth; h=source.videoHeight;
+ } else if (source instanceof HTMLImageElement) {
+  w=source.naturalWidth; h=source.naturalHeight;
+ } else if (source instanceof HTMLCanvasElement) {
+  w=source.width; h=source.height;
+ } else if (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap) {
+  w=source.width; h=source.height;
+ } else if (typeof OffscreenCanvas !== 'undefined' && source instanceof OffscreenCanvas) {
+  w=source.width; h=source.height;
+ } else {
+  throw new Error('Jenis gambar tidak didukung');
+ }
+ if (!w || !h) throw new Error('Dimensi gambar tidak valid');
+ const scale=Math.min(SIDE/w,SIDE/h);
+ ctx.drawImage(source,(SIDE-w*scale)/2,(SIDE-h*scale)/2,w*scale,h*scale);
+ return c;
+}
 export function embed(source:CanvasImageSource,id:string,strength=22){const c=imageCanvas(source),ctx=c.getContext('2d',{willReadFrequently:true})!,img=ctx.getImageData(0,0,SIDE,SIDE),d=img.data;const bits=payload(id);
  // A pixel-space realization of the two orthogonal DCT basis patterns.
  for(let n=0;n<order.length;n++){const cell=order[n],bx=(cell%GRID)*8,by=Math.floor(cell/GRID)*8,bit=bits[n%BITS];const c1=coeff(d,bx,by,U,V),c2=coeff(d,bx,by,U2,V2);const desired=(bit?1:-1)*strength;const delta=(desired-(c1-c2))/2;

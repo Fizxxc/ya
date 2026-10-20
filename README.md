@@ -31,3 +31,11 @@ Alternatively, in this directory run `npm install`, `npm run dev`, or `npx verce
 - Add robust synchronization pilots, corner detection and homography, temporal frame registration, stronger ECC and 128-bit IDs, adaptive image quality metrics and camera field tests.
 - Add Supabase Auth/Postgres/Storage, RLS, server-side token verification, rate limiting and encrypted vault.
 - Move DCT decoder into WASM worker, benchmark across iOS Safari and Android Chrome.
+
+## v1.1 — 2026-10-20
+- Fixed Vercel TypeScript build error: `videoWidth`/`videoHeight` are now accessed only on `HTMLVideoElement`, while image/canvas sources use their correct dimensions.
+- Refreshed mobile-first typography, spacing, sticky tab navigation, and restrained visual styling.
+- Pinned Node.js to `22.x` instead of `>=20` to avoid automatic future major upgrades.
+- Important: This is an experimental local-only prototype. Messages are saved in the generator browser's localStorage, not synced between devices. Camera scanning is not validated as reliable; PNG file decode is the primary test.
+- To deploy: push project contents to GitHub, import repository in Vercel, use Next.js preset and Node 22.x, then deploy. No environment variables needed.
+- Run `npm install && npm run build` before deployment. This environment could not download npm dependencies to complete that check; Vercel must run the build.
